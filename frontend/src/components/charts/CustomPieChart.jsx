@@ -1,0 +1,47 @@
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import CustomTooltip from "./CustomToolTip";
+import CustomLegend from "./CustomLegend";
+
+function CustomPieChart({ data, label, colors }) {
+  if (!data || data.length === 0)
+    return (
+      <p className="text-center text-sm text-gray-400">No data available</p>
+    );
+
+  return (
+    <>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="count"
+            nameKey="status"
+            cx="50%"
+            cy="50%"
+            outerRadius={130}
+            innerRadius={100}
+            labelLine={false}
+          >
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={colors[index % colors.length]}
+              />
+            ))}
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+          <Legend content={<CustomLegend />} />
+        </PieChart>
+      </ResponsiveContainer>
+    </>
+  );
+}
+
+export default CustomPieChart;
