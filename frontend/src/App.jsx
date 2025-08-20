@@ -12,6 +12,7 @@ import TaskFormPage from "./pages/admin/TaskFormPage";
 import ManageUsersPage from "./pages/admin/ManageUsersPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import UserDashboardPage from "./pages/UserDashboardPage";
+// import GoogleCallbackPage from "./pages/GoogleCallbackPage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        {/* <Route path="/google-callback" element={<GoogleCallbackPage />} /> */}
 
         {/* General Authenticated Routes */}
         <Route

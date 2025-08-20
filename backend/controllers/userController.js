@@ -2,6 +2,7 @@ import asyncHandler from "../middleware/asyncHandler.js";
 import generateToken from "../utils/generateToken.js";
 import User from "../models/userModel.js";
 import Task from "../models/taskModel.js";
+import crypto from "crypto";
 
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
