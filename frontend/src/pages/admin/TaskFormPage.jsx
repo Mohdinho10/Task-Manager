@@ -17,6 +17,10 @@ import Loader from "../../components/Loader";
 import ClipLoader from "react-spinners/ClipLoader";
 import Modal from "../../components/Modal";
 
+// ✅ Import DatePicker
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 function TaskFormPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -193,19 +197,30 @@ function TaskFormPage() {
                 placeholder="Select Priority"
               />
             </div>
+
+            {/* ✅ Updated Due Date with react-datepicker */}
             <div className="col-span-6 md:col-span-4">
               <label className="text-xs font-medium text-slate-600">
                 Due Date
               </label>
-              <input
-                type="date"
-                className="form-input"
-                value={taskData.dueDate}
-                onChange={({ target }) =>
-                  changeValueHandler("dueDate", target.value)
+              <DatePicker
+                selected={taskData.dueDate ? new Date(taskData.dueDate) : null}
+                onChange={(date) =>
+                  changeValueHandler(
+                    "dueDate",
+                    date ? date.toISOString().split("T")[0] : "",
+                  )
                 }
+                dateFormat="yyyy-MM-dd"
+                placeholderText="Select due date"
+                className="form-input w-full"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                withPortal // ✅ ensures the popup is rendered on top of everything
               />
             </div>
+
             <div className="col-span-12 md:col-span-3">
               <label className="text-xs font-medium text-slate-600">
                 Assign To
@@ -265,20 +280,22 @@ function TaskFormPage() {
         isOpen={openDeleteAlert}
         closeHandler={() => setOpenDeleteAlert(false)}
         title="Confirm Delete"
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        contentClassName="bg-white rounded-lg shadow-xl p-6 w-full max-w-md"
       >
-        <p className="mb-4 text-sm">
+        <p className="mb-4 text-sm text-gray-700">
           Are you sure you want to delete this task?
         </p>
         <div className="flex justify-end gap-2">
           <button
             onClick={() => setOpenDeleteAlert(false)}
-            className="cursor-pointer rounded border border-gray-300 px-3 py-1 text-sm text-gray-500"
+            className="cursor-pointer rounded border border-gray-300 px-3 py-1 text-sm text-gray-500 hover:bg-gray-100"
           >
             Cancel
           </button>
           <button
             onClick={handleDelete}
-            className="cursor-pointer rounded bg-red-500 px-3 py-1 text-sm text-white"
+            className="cursor-pointer rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600"
             disabled={isDeleting}
           >
             {isDeleting ? <ClipLoader color="white" size={24} /> : "Delete"}

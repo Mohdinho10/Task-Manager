@@ -12,6 +12,7 @@ import TaskFormPage from "./pages/admin/TaskFormPage";
 import ManageUsersPage from "./pages/admin/ManageUsersPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import UserDashboardPage from "./pages/UserDashboardPage";
+import CalendarPage from "./pages/CalendarPage";
 // import GoogleCallbackPage from "./pages/GoogleCallbackPage";
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
             <Route path="/" element={<UserDashboardPage />} />
             <Route path="/tasks" element={<MyTasksPage />} />
             <Route path="/tasks/:id" element={<TaskDetailsPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
           </Route>
         </Route>
 

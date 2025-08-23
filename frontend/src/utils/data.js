@@ -33,6 +33,12 @@ export const SIDE_MENU_DATA = [
   },
   {
     id: 5,
+    label: "Calendar", // ✅ NEW
+    icon: LuClipboardCheck,
+    path: "/calendar",
+  },
+  {
+    id: 5,
     label: "Logout",
     icon: LuLogOut,
     path: "logout",
@@ -52,7 +58,12 @@ export const SIDE_MENU_USER_DATA = [
     icon: LuClipboardCheck,
     path: "/tasks",
   },
-
+  {
+    id: 3,
+    label: "Calendar", // ✅ NEW
+    icon: LuClipboardCheck,
+    path: "/calendar",
+  },
   {
     id: 3,
     label: "Logout",
