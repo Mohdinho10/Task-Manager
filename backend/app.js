@@ -6,6 +6,7 @@ import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
+import path from "path";
 import userRoutes from "./routes/userRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
@@ -14,6 +15,10 @@ import User from "./models/userModel.js";
 import { notFound, errorHandler } from "./middleware/ErrorMiddleware.js";
 
 dotenv.config();
+
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -93,6 +98,17 @@ app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/notifications", notificationRoutes);
+
+// Serve frontend in production
+if (process.env.NODE_ENV === "production") {
+  const frontendPath = path.join(__dirname, "..", "frontend", "dist");
+
+  app.use(express.static(frontendPath));
+
+  app.get(/.*/, (req, res) => {
+    res.sendFile(path.resolve(frontendPath, "index.html"));
+  });
+}
 
 app.use(notFound);
 app.use(errorHandler);
