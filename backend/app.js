@@ -12,6 +12,7 @@ import taskRoutes from "./routes/taskRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import User from "./models/userModel.js";
+import { fileURLToPath } from "url";
 import { notFound, errorHandler } from "./middleware/ErrorMiddleware.js";
 
 dotenv.config();
