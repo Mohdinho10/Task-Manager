@@ -4,6 +4,15 @@ import { apiSlice } from "./apiSlice";
 export const usersApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Public
+    createUser: builder.mutation({
+      query: (formData) => ({
+        url: USERS_URL,
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      }),
+      invalidatesTags: ["User"],
+    }),
     register: builder.mutation({
       query: (formData) => ({
         url: `${USERS_URL}/register`,
@@ -32,6 +41,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
     getUserProfile: builder.query({
       query: () => ({
         url: `${USERS_URL}/profile`,
+        method: "GET",
         credentials: "include",
       }),
       providesTags: ["User"],
@@ -50,6 +60,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
     getUsers: builder.query({
       query: () => ({
         url: USERS_URL,
+        method: "GET",
         credentials: "include",
       }),
       providesTags: ["Users"],
@@ -81,6 +92,10 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Users"],
     }),
+    getUserByEmail: builder.query({
+      query: (email) => `${USERS_URL}/profile/${email}`,
+      providesTags: ["User"],
+    }),
   }),
 });
 
@@ -94,4 +109,6 @@ export const {
   useGetUserQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useCreateUserMutation,
+  useLazyGetUserByEmailQuery,
 } = usersApiSlice;

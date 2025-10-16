@@ -12,15 +12,16 @@ import {
   updateTaskCheckList,
   updateTaskStatus,
 } from "../controllers/taskController.js";
-import { isAdmin, isAuthenticated } from "../middleware/authMiddleware.js";
+import { verifyToken } from "../middleware/verifyToken.js";
+import { verifyAdmin } from "../middleware/verifyAdmin.js";
 
 const router = Router();
 
 // Create task (admin only)
-router.post("/", isAuthenticated, isAdmin, createTask);
+router.post("/", verifyToken, verifyAdmin, createTask);
 
 // Protect all routes below
-router.use(isAuthenticated);
+router.use(verifyToken);
 
 // Dashboard
 router.get("/dashboard", getDashboardData);
@@ -31,8 +32,8 @@ router.get("/tasks", getTasks);
 
 // Task detail and operations
 router.get("/:id", getTask);
-router.put("/:id", isAdmin, updateTask);
-router.delete("/:id", isAdmin, deleteTask);
+router.put("/:id", verifyAdmin, updateTask);
+router.delete("/:id", verifyAdmin, deleteTask);
 
 // Task-specific updates (status & checklist)
 router.put("/:id/status", updateTaskStatus); // restrict if needed

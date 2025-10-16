@@ -1,14 +1,31 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import ClipLoader from "react-spinners/ClipLoader";
-import toast from "react-hot-toast";
+import app from "../firebase/firebase.config";
 import { motion } from "framer-motion";
-import { useRegisterMutation } from "../slices/userApiSlice";
 import { IoMdClose } from "react-icons/io";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../slices/authSlice";
+import {
+  useCreateUserMutation,
+  useLazyGetUserByEmailQuery,
+} from "../slices/userApiSlice";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  updateProfile,
+} from "firebase/auth";
+import ClipLoader from "react-spinners/ClipLoader";
+import toast from "react-hot-toast";
+
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 function RegisterPage() {
+  const [createUserOnDB] = useCreateUserMutation();
+  const [getUserByEmail] = useLazyGetUserByEmailQuery();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,12 +33,11 @@ function RegisterPage() {
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fileInputRef = useRef(null); // to reset file input
-
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [register, { isLoading }] = useRegisterMutation();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -37,10 +53,11 @@ function RegisterPage() {
     setImageFile(null);
     setPreviewUrl(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""; // reset input field
+      fileInputRef.current.value = "";
     }
   };
 
+  // ✅ Register with email/password
   const submitHandler = async (e) => {
     e.preventDefault();
 
@@ -48,31 +65,76 @@ function RegisterPage() {
       toast.error("Please fill in all fields");
       return;
     }
-
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append("password", password);
-    if (imageFile) formData.append("profileImage", imageFile);
-
     try {
-      const res = await register(formData).unwrap();
-      dispatch(setCredentials({ ...res }));
-      toast.success("Registration successful!");
-      navigate("/");
+      setIsLoading(true);
+
+      // 1️⃣ Create user in Firebase
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: name });
+
+      // 2️⃣ Prepare FormData for backend upload
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("uid", cred.user.uid);
+      if (imageFile) formData.append("profileImage", imageFile);
+
+      // 3️⃣ Create in backend
+      await createUserOnDB(formData).catch(() => {});
+
+      // 4️⃣ Fetch full MongoDB user data
+      const { data: dbUser } = await getUserByEmail(email);
+      if (dbUser) {
+        dispatch(setCredentials(dbUser));
+        toast.success("Registration successful!");
+        navigate("/");
+      }
     } catch (err) {
-      toast.error(err?.data?.message || "Registration failed");
+      toast.error(err?.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ✅ Google Register/Login
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      const userData = {
+        name: user.displayName,
+        email: user.email,
+        profileImage: user.photoURL,
+        uid: user.uid,
+      };
+
+      // Save or ignore if exists
+      await createUserOnDB(userData).catch(() => {});
+
+      // fetch full MongoDB user
+      const { data: dbUser } = await getUserByEmail(user.email);
+      console.log(dbUser);
+      if (dbUser) {
+        dispatch(setCredentials(dbUser));
+        toast.success("Signed in with Google!");
+        navigate("/");
+      }
+    } catch (err) {
+      toast.error(err?.message || "Google sign-in failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="mx-auto max-w-md rounded-lg bg-white p-8 shadow-xl md:mt-6 md:py-2">
-      {/* "mx-auto mt-6 max-w-md rounded-lg bg-white px-8 py-2 shadow-xl" */}
       <h2 className="mb-6 text-center text-3xl font-bold text-blue-600">
         Create Account
       </h2>
@@ -138,7 +200,7 @@ function RegisterPage() {
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            disabled={!!previewUrl} // disable if image exists
+            disabled={!!previewUrl}
             className={`block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold ${
               previewUrl
                 ? "cursor-not-allowed file:bg-gray-200 file:text-gray-400"
@@ -187,9 +249,39 @@ function RegisterPage() {
         </button>
       </form>
 
+      <div className="my-6 flex items-center">
+        <div className="flex-grow border-t border-gray-300"></div>
+        <span className="mx-3 text-sm text-gray-500">or</span>
+        <div className="flex-grow border-t border-gray-300"></div>
+      </div>
+
+      {/* ✅ Google Sign Up Button */}
+      <button
+        type="button"
+        className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+        onClick={handleGoogleSignIn}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ClipLoader size={18} color="black" />
+        ) : (
+          <>
+            <img
+              src="https://authjs.dev/img/providers/google.svg"
+              alt="Google logo"
+              className="h-5 w-5"
+            />
+            Continue with Google
+          </>
+        )}
+      </button>
+
       <p className="mt-4 text-center text-sm text-gray-600">
         Already have an account?{" "}
-        <Link to="/login" className="text-blue-600 hover:underline">
+        <Link
+          to="/login"
+          className="cursor-pointer text-blue-600 hover:underline"
+        >
           Login
         </Link>
       </p>

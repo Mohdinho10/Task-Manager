@@ -20,6 +20,7 @@ function ProfilePage() {
   const fileInputRef = useRef(null);
 
   const { data: profile } = useGetUserProfileQuery();
+  console.log("Profile data:", profile);
   const [updateProfile, { isLoading }] = useUpdateUserProfileMutation();
 
   const [name, setName] = useState("");

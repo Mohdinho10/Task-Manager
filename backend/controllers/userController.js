@@ -3,79 +3,92 @@ import generateToken from "../utils/generateToken.js";
 import User from "../models/userModel.js";
 import Task from "../models/taskModel.js";
 
-export const register = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+export const createUser = asyncHandler(async (req, res) => {
+  const { name, email, uid } = req.body;
 
-  // multer stores the file info here:
-  const file = req.file;
-
-  if (!name || !email || !password) {
-    res.status(400);
-    throw new Error("Please provide all required fields");
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ message: "User already exists" });
   }
 
-  const userExists = await User.findOne({ email });
-
-  if (userExists) {
-    res.status(400);
-    throw new Error("User already exists");
-  }
-
-  let profileImageUrl = null;
-  if (file) {
-    // Assuming your static files are served from /uploads
-    profileImageUrl = `/uploads/${file.filename}`;
+  // Determine profile image URL
+  let profileImageUrl = "";
+  if (req.file) {
+    // Use your public folder path
+    profileImageUrl = `/uploads/${req.file.filename}`;
+  } else if (req.body.profileImage) {
+    // Google or Firebase users who already have a photoURL
+    profileImageUrl = req.body.profileImage;
   }
 
   const user = await User.create({
     name,
     email,
-    password,
+    uid,
     profileImageUrl,
   });
 
-  // checking if there's user
+  res.status(201).json(user);
+});
+
+export const getUserByEmail = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.params.email });
+
   if (!user) {
-    res.status(400);
-    throw new Error("Invalid user data");
+    return res.status(200).json(null);
   }
 
-  generateToken(res, user._id);
-
-  res.status(200).json({
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    profileImageUrl: user.profileImageUrl,
-  });
+  res.status(200).json(user);
 });
 
-export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+// export const register = asyncHandler(async (req, res) => {
+//   const { name, email, password } = req.body;
 
-  // check if email and password does not exists
-  if (!email || !password) {
-    throw new Error("Please provide email and password", 401);
-  }
+//   // multer stores the file info here:
+//   const file = req.file;
 
-  const user = await User.findOne({ email });
+//   if (!name || !email || !password) {
+//     res.status(400);
+//     throw new Error("Please provide all required fields");
+//   }
 
-  if (user && (await user.comparePassword(password))) {
-    generateToken(res, user);
+//   const userExists = await User.findOne({ email });
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      profileImageUrl: user.profileImageUrl || null,
-    });
-  } else {
-    res.status(401);
-    throw new Error("Invalid email or password");
-  }
-});
+//   if (userExists) {
+//     res.status(400);
+//     throw new Error("User already exists");
+//   }
+
+//   let profileImageUrl = null;
+//   if (file) {
+//     // Assuming your static files are served from /uploads
+//     profileImageUrl = `/uploads/${file.filename}`;
+//   }
+
+//   const user = await User.create({
+//     name,
+//     email,
+//     password,
+//     profileImageUrl,
+//   });
+
+//   // checking if there's user
+//   if (!user) {
+//     res.status(400);
+//     throw new Error("Invalid user data");
+//   }
+
+//   generateToken(res, user._id);
+
+//   res.status(200).json({
+//     _id: user._id,
+//     name: user.name,
+//     email: user.email,
+//     role: user.role,
+//     profileImageUrl: user.profileImageUrl,
+//   });
+// });
 
 export const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("-password");
@@ -180,36 +193,6 @@ export const updateUser = asyncHandler(async (req, res) => {
   });
 });
 
-// export const getUsers = asyncHandler(async (req, res) => {
-//   const users = await User.find({ role: "member" }).select("-password");
-
-//   //   Add tasks counts to each user
-//   const usersWithTaskCounts = await Promise.all(
-//     users.map(async (user) => {
-//       const pendingTasks = await Task.countDocuments({
-//         assignedTo: user._id,
-//         status: "pending",
-//       });
-//       const inProgressTasks = await Task.countDocuments({
-//         assignedTo: user._id,
-//         status: "inProgress",
-//       });
-//       const completedTasks = await Task.countDocuments({
-//         assignedTo: user._id,
-//         status: "completed",
-//       });
-
-//       return {
-//         ...user._doc,
-//         pendingTasks,
-//         inProgressTasks,
-//         completedTasks,
-//       };
-//     })
-//   );
-//   res.json(usersWithTaskCounts);
-// });
-
 export const getUsers = asyncHandler(async (req, res) => {
   const users = await User.find({ role: "member" }).select("-password");
 
@@ -274,12 +257,12 @@ export const deleteUser = asyncHandler(async (req, res) => {
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  res.cookie("jwt", "", {
-    httpOnly: true,
-    expires: new Date(0), // expires immediately
-    sameSite: "strict",
-    secure: process.env.NODE_ENV !== "development",
-  });
-
-  res.status(200).json({ message: "Logged out successfully" });
+  res
+    .clearCookie("jwt", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    })
+    .status(200)
+    .send({ message: "Logged out successfully" });
 });

@@ -1,17 +1,18 @@
 import { Router } from "express";
 import {
+  createUser,
   deleteUser,
   getUser,
+  getUserByEmail,
   getUserProfile,
   getUsers,
-  login,
   logout,
-  register,
   updateUser,
   updateUserProfile,
 } from "../controllers/userController.js";
-import { isAdmin, isAuthenticated } from "../middleware/authMiddleware.js";
 import multer from "multer";
+import { verifyToken } from "../middleware/verifyToken.js";
+import { verifyAdmin } from "../middleware/verifyAdmin.js";
 
 const router = Router();
 
@@ -27,24 +28,27 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Public routes
-router.post("/register", upload.single("profileImage"), register);
-router.post("/login", login);
+// ✅ Public routes
+router.post("/", upload.single("profileImage"), createUser);
+// router.post("/register", upload.single("profileImage"), register);
 
-// Authenticated user routes
-router.post("/logout", isAuthenticated, logout);
-router.get("/profile", isAuthenticated, getUserProfile);
+// ✅ Authenticated user routes
+router.post("/logout", verifyToken, logout);
+router.get("/profile", verifyToken, getUserProfile);
 router.put(
   "/profile",
-  isAuthenticated,
+  verifyToken,
   upload.single("profileImage"),
   updateUserProfile
 );
 
-// Admin-only routes
-router.get("/", isAuthenticated, isAdmin, getUsers);
-router.get("/:id", isAuthenticated, isAdmin, getUser);
-router.put("/:id", isAuthenticated, isAdmin, updateUser);
-router.delete("/:id", isAuthenticated, isAdmin, deleteUser);
+// ✅ Admin-only routes
+router.get("/", verifyToken, verifyAdmin, getUsers);
+router.get("/:id", verifyToken, verifyAdmin, getUser);
+router.put("/:id", verifyToken, verifyAdmin, updateUser);
+router.delete("/:id", verifyToken, verifyAdmin, deleteUser);
+
+// ✅ Moved to avoid conflict
+router.get("/profile/:email", getUserByEmail);
 
 export default router;

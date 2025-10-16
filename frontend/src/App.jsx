@@ -10,7 +10,6 @@ import TaskDetailsPage from "./pages/TaskDetailsPage";
 import ManageTasksPage from "./pages/admin/ManageTasksPage";
 import TaskFormPage from "./pages/admin/TaskFormPage";
 import ManageUsersPage from "./pages/admin/ManageUsersPage";
-import UnauthorizedPage from "./pages/UnauthorizedPage";
 import UserDashboardPage from "./pages/UserDashboardPage";
 import CalendarPage from "./pages/CalendarPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -24,8 +23,6 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
-        {/* <Route path="/google-callback" element={<GoogleCallbackPage />} /> */}
 
         {/* General Authenticated Routes */}
         <Route

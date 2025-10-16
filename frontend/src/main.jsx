@@ -4,14 +4,14 @@ import { Provider } from "react-redux";
 import "./index.css";
 import App from "./App.jsx";
 import store from "./store.js";
-// import AuthProvider from "./context/AuthProvider.jsx";
+import AuthProvider from "./context/AuthProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
-      {/* <AuthProvider> */}
-      <App />
-      {/* </AuthProvider> */}
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </Provider>
   </StrictMode>,
 );

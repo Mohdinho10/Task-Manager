@@ -25,6 +25,7 @@ function UserDashboardPage() {
     isError,
     error,
   } = useGetUserDashboardDataQuery();
+  console.log("Dashboard Data:", dashboardData);
 
   const prepareChartData = (data) => {
     const { taskDistribution = {}, taskPriorityLevels = {} } = data || {};

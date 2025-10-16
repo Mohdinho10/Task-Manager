@@ -2,6 +2,7 @@ import asyncHandler from "../middleware/asyncHandler.js";
 import Task from "../models/taskModel.js";
 import Notification from "../models/notificationModel.js";
 import User from "../models/userModel.js";
+import mongoose from "mongoose";
 import { sendWhatsAppMessage } from "../utils/whatsapp.js"; // import your WhatsApp utility
 import { sendEmail } from "../utils/email.js";
 
@@ -74,8 +75,8 @@ export const getDashboardData = asyncHandler(async (req, res) => {
 
 export const getUserDashboardData = asyncHandler(async (req, res) => {
   const userId = req.user._id;
+  const userObjectId = new mongoose.Types.ObjectId(userId);
 
-  // Fetch Statistics for user-specific tasks
   const totalTasks = await Task.countDocuments({ assignedTo: userId });
   const pendingTasks = await Task.countDocuments({
     assignedTo: userId,
@@ -91,10 +92,10 @@ export const getUserDashboardData = asyncHandler(async (req, res) => {
     dueDate: { $lt: new Date() },
   });
 
-  // Task Distribution by status
+  // Task Distribution
   const taskStatuses = ["pending", "inProgress", "completed"];
   const taskDistributionRaw = await Task.aggregate([
-    { $match: { assignedTo: userId } },
+    { $match: { assignedTo: userObjectId } },
     {
       $group: {
         _id: "$status",
@@ -104,18 +105,16 @@ export const getUserDashboardData = asyncHandler(async (req, res) => {
   ]);
 
   const taskDistribution = taskStatuses.reduce((acc, status) => {
-    const formattedKey = status.replace(/\$+/g, ""); // Remove spaces for response keys
-    acc[formattedKey] =
+    acc[status] =
       taskDistributionRaw.find((item) => item._id === status)?.count || 0;
     return acc;
   }, {});
+  taskDistribution["All"] = totalTasks;
 
-  taskDistribution["All"] = totalTasks; // Add total count to task distribution
-
-  // Ensure all priority levels are included
+  // Task Priorities
   const taskPriorities = ["low", "medium", "high"];
   const taskPriorityLevelsRaw = await Task.aggregate([
-    { $match: { assignedTo: userId } },
+    { $match: { assignedTo: userObjectId } },
     {
       $group: {
         _id: "$priority",
@@ -129,24 +128,15 @@ export const getUserDashboardData = asyncHandler(async (req, res) => {
     return acc;
   }, {});
 
-  // Fetch 10 recent tasks
+  // Recent Tasks
   const recentTasks = await Task.find({ assignedTo: userId })
     .sort({ createdAt: -1 })
     .limit(10)
     .select("title status priority dueDate createdAt");
 
   res.status(200).json({
-    statistics: {
-      totalTasks,
-      overdueTasks,
-      pendingTasks,
-      completedTasks,
-      overdueTasks,
-    },
-    charts: {
-      taskDistribution,
-      taskPriorityLevels,
-    },
+    statistics: { totalTasks, overdueTasks, pendingTasks, completedTasks },
+    charts: { taskDistribution, taskPriorityLevels },
     recentTasks,
   });
 });

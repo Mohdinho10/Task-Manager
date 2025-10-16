@@ -16,7 +16,7 @@ const statusColors = {
 
 function UserModal({ user, onClose, currentUser }) {
   const overlayRef = useRef(null);
-  const [showConfirm, setShowConfirm] = useState(false); // ✅ confirmation state
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [deleteUser] = useDeleteUserMutation();
   const [updateUser] = useUpdateUserMutation();
@@ -36,9 +36,7 @@ function UserModal({ user, onClose, currentUser }) {
 
   // ✅ Close on click outside
   const handleClickOutside = (e) => {
-    if (e.target === overlayRef.current) {
-      onClose();
-    }
+    if (e.target === overlayRef.current) onClose();
   };
 
   // ✅ Delete handler
@@ -95,9 +93,15 @@ function UserModal({ user, onClose, currentUser }) {
               {user?.name?.charAt(0)}
             </div>
           )}
+
           <div>
             <p className="text-base font-medium">{user?.name}</p>
             <p className="text-sm text-gray-500">{user?.email}</p>
+
+            {/* ✅ Phone number */}
+            {user?.phone && (
+              <p className="text-sm text-gray-500">📞 {user.phone}</p>
+            )}
 
             {/* Availability */}
             <div className="mt-1 flex items-center gap-2">
@@ -143,17 +147,15 @@ function UserModal({ user, onClose, currentUser }) {
         {/* Admin Actions */}
         {currentUser?.role === "admin" && currentUser?._id !== user._id && (
           <div className="mt-6 flex justify-between">
-            {/* Delete button only if not admin */}
             {user.role !== "admin" && (
               <button
-                onClick={() => setShowConfirm(true)} // ✅ show confirm box
+                onClick={() => setShowConfirm(true)}
                 className="cursor-pointer rounded bg-red-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600"
               >
                 Delete User
               </button>
             )}
 
-            {/* Promote/Demote button */}
             <button
               onClick={handleToggleRole}
               className="cursor-pointer rounded bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600"

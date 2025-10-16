@@ -8,6 +8,9 @@ import { BASE_URL } from "../constants";
 import CharAvatar from "../components/CharAvatar";
 import toast from "react-hot-toast";
 import { LuLogOut } from "react-icons/lu";
+import { getAuth, signOut } from "firebase/auth";
+import { apiSlice } from "../slices/apiSlice";
+import app from "../firebase/firebase.config";
 
 function SideMenu({ setOpenSideMenu, openSideMenu }) {
   const [sideMenuData, setSideMenuData] = useState([]);
@@ -18,16 +21,27 @@ function SideMenu({ setOpenSideMenu, openSideMenu }) {
   const currentPath = location.pathname;
 
   const [logoutApiCall] = useLogoutMutation();
+  const auth = getAuth(app);
 
   const logoutHandler = async () => {
     try {
+      // 1️⃣ Clear backend session
       await logoutApiCall().unwrap();
+
+      // 2️⃣ Sign out from Firebase
+      await signOut(auth);
+
+      // 3️⃣ Clear Redux state
       dispatch(logoutAction());
+      // your existing logout
+      dispatch(apiSlice.util.resetApiState()); // 👈 clear cached data
+
+      // 4️⃣ Feedback + redirect
       toast.success("Logged out successfully.");
       navigate("/login");
     } catch (err) {
-      console.error(err);
-      toast.error(err?.data?.message || "Logout failed.");
+      console.error("Logout failed:", err);
+      toast.error(err?.data?.message || err?.message || "Logout failed.");
     }
   };
 
@@ -47,7 +61,7 @@ function SideMenu({ setOpenSideMenu, openSideMenu }) {
           {user?.profileImageUrl ? (
             <img
               src={`${BASE_URL}${user?.profileImageUrl.replace("public", "")}`}
-              alt="Profile Image"
+              alt="Profile"
               className="h-20 w-20 rounded-full bg-slate-400"
             />
           ) : (

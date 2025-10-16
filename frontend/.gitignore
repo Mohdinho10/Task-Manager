@@ -26,3 +26,4 @@ dist-ssr
 .wwebjs_auth/
 .wwebjs_cache/
 session.json
+

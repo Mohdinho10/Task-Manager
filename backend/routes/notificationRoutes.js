@@ -4,10 +4,11 @@ import {
   getNotifications,
   markAsRead,
 } from "../controllers/notificationController.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = Router();
 
-router.get("/", isAuthenticated, getNotifications);
-router.put("/:id/read", isAuthenticated, markAsRead);
+router.get("/", verifyToken, getNotifications);
+router.put("/:id/read", verifyToken, markAsRead);
 
 export default router;

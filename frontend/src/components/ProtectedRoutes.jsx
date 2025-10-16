@@ -3,6 +3,7 @@ import { Navigate, Outlet } from "react-router-dom";
 
 function ProtectedRoutes({ allowedRoutes }) {
   const { userInfo } = useSelector((state) => state.auth);
+  console.log(userInfo);
 
   if (!userInfo) {
     return <Navigate to="/login" replace />;
