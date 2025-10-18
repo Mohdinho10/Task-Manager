@@ -1,7 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 // const baseQuery = fetchBaseQuery({ baseUrl: BASE_URL });
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BASE_URL =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:3000"
+    : "https://task-manager-j14b.onrender.com";
 
 export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({

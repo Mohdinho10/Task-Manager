@@ -10,7 +10,9 @@ const auth = getAuth(app);
 
 // ✅ Detect API base URL from env
 const BASE_URL =
-  import.meta.env.MODE === "development" ? "http://localhost:3000" : "";
+  import.meta.env.MODE === "development"
+    ? "http://localhost:3000"
+    : "https://task-manager-j14b.onrender.com";
 
 const AuthProvider = ({ children }) => {
   const dispatch = useDispatch();
